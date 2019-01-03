@@ -1,9 +1,9 @@
 package App::PerlPackage2PlantUMLClassDiagram::Package;
-use 5.014;
-use strict;
+use v5.28;
 use warnings;
 
 use PPI::Document;
+use Perl::Critic::Utils 'is_function_call';
 use Text::MicroTemplate::DataSection 'render_mt';
 
 sub new {
@@ -64,7 +64,33 @@ sub parent_packages {
         }
     }
 
+    push @$parent_packages, $self->_moose_parent_packages->@*;
+
     $parent_packages;
+}
+
+sub _moose_parent_packages {
+    my ($self) = @_;
+
+    my $use_moose =
+        grep { $_->module =~ /^(Moose|Mouse|Moo)$/ }
+        grep { defined $_->module } ( $self->document->find('PPI::Statement::Include') || [] )->@*;
+    if ($use_moose) {
+        my @statements =
+            grep { $_->schild(0)->literal eq 'extends' }
+            grep { defined $_->schild(0) } 
+            grep {
+                my $statement = $_;
+                my @has_extends =
+                    grep { $_->literal eq 'extends' }
+                    grep { is_function_call($_) } ( $statement->find('PPI::Token::Word') || [] )->@*;
+            } $self->document->find('PPI::Statement')->@*;
+
+        [ map { $_->find('PPI::Token::Quote') } @statements ];
+    }
+    else {
+        [];
+    }
 }
 
 sub _methods {
