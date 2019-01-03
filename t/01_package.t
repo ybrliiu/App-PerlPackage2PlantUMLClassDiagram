@@ -57,6 +57,13 @@ subtest 'method which start with _' => sub {
     is_deeply $package->public_methods, ['user_info()'];
 };
 
+subtest 'moose class' => sub {
+    my $package = App::PerlPackage2PlantUMLClassDiagram::Package->new('t/data/Mooseclass.pm');
+    is $package->to_inherit_syntax, <<'UML';
+Exporter <|-- Mooseclass
+UML
+};
+
 subtest 'not existing file' => sub {
     local $@;
 
