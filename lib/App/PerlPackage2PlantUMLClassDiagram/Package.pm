@@ -86,7 +86,7 @@ sub _moose_parent_packages {
                     grep { is_function_call($_) } ( $statement->find('PPI::Token::Word') || [] )->@*;
             } $self->document->find('PPI::Statement')->@*;
 
-        [ map { $_->find('PPI::Token::Quote') } @statements ];
+        [ map { map { $_->string } $_->find('PPI::Token::Quote')->@* } @statements ];
     }
     else {
         [];
